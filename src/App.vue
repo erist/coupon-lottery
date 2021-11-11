@@ -37,7 +37,7 @@
                   v-model="password"
                   label="쿠폰 확인용 암호"
                   type="password"
-                  hint="* 절대로 사용중인 비밀번호 넣지 마세요!"
+                  hint="본인 확인용입니다. 절대로 사용중인 비밀번호 넣지 마세요!"
               ></v-text-field>
             </v-container>
             <v-card-actions>

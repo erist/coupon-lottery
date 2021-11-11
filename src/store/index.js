@@ -35,7 +35,9 @@ export default new Vuex.Store({
       state.coupons = [];
       state.signedIn = false
     },
-
+    setMyCoupons: function (state, payload) {
+      state.coupons = payload.coupons;
+    }
   },
   actions: {
     signIn: function ({ commit }, payload) {
@@ -43,6 +45,9 @@ export default new Vuex.Store({
     },
     signOut: function ({ commit }) {
       return commit('setSignedOut');
+    },
+    setCoupons: function ({ commit }, payload) {
+      return commit('setMyCoupons', payload);
     }
   }
 })
