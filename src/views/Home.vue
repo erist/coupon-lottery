@@ -150,7 +150,6 @@ export default {
       const p = couponDoc.data().code.length / this.totalUsers * 10000;
       const d = Math.random() * (10000 - 1) + 1;
       const result = p > d;
-      const result = true;
       await firestore.runTransaction(async (t) => {
         let task = [];
         if (result) {
