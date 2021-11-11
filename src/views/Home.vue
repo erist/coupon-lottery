@@ -138,10 +138,6 @@ export default {
       this.showSpinner = false;
     },
     draw: async function () {
-      const p = this.drawingCoupon.code.length / this.totalUsers * 10000;
-      const d = Math.random() * (10000 - 1) + 1;
-      const result = p > d;
-
       const couponDocRef = firestore.collection('Coupons').doc(this.drawingCoupon.id);
       const userDocRef = firestore.collection('Users').doc(this.userData.id);
       const drawDocRef = await firestore.collection('Draws').add({
@@ -150,6 +146,11 @@ export default {
         couponDocId: this.drawingCoupon.id,
         timestamp: Date.now()
       });
+      const couponDoc = await couponDocRef.get();
+      const p = couponDoc.data().code.length / this.totalUsers * 10000;
+      const d = Math.random() * (10000 - 1) + 1;
+      const result = p > d;
+      const result = true;
       await firestore.runTransaction(async (t) => {
         let task = [];
         if (result) {
@@ -157,9 +158,9 @@ export default {
             t.get(userDocRef),
             t.get(couponDocRef)
           ]);
-          const { id: couponDocId, name: couponName, code: couponCodes } = couponDoc.data();
+          const { name: couponName, code: couponCodes } = couponDoc.data();
           const userCoupons = [...userDoc.data().coupons, {
-            docId: couponDocId,
+            docId: couponDoc.id,
             name: couponName,
             code: couponCodes.pop()
           }];
@@ -181,6 +182,12 @@ export default {
     onClickDrawConfirm: async function () {
       this.showSpinner = true;
 
+      const couponDoc = await firestore.collection('Coupons').doc(this.drawingCoupon.id).get();
+      if (couponDoc.data().code.length === 0) {
+        alert("쿠폰이 모두 소진되었습니다.");
+        this.showSpinner = false;
+        return;
+      }
       const hasChance = await this.getChance(this.drawingCoupon.id);
       if (!hasChance) {
         alert("모든 뽑기 기회가 소진되었습니다.");
@@ -188,7 +195,7 @@ export default {
         return;
       }
       const alreadySuccess = this.userData.coupons.filter(coupon => coupon.docId === this.drawingCoupon.id);
-      if (alreadySuccess) {
+      if (alreadySuccess.length > 0) {
         alert("이미 당첨된 쿠폰입니다.");
         this.showSpinner = false;
         return;
