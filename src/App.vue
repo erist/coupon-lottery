@@ -5,6 +5,12 @@
       color="primary"
       dark
     >
+      <v-btn
+        text
+        @click="() => { this.showHelpDialog = true; }"
+      >
+        <span class="mr-2">게임 방법</span>
+      </v-btn>
       <v-spacer></v-spacer>
       <v-btn
         v-show="isSignedIn"
@@ -78,6 +84,11 @@
           </v-card-title>
           <v-card-text>
             <v-list>
+              <a
+                  href="https://welfare.qookkagames.co.kr/barter#/"
+                  target="_blank"
+              >쿠폰 교환 사이트
+              </a>
               <p v-if="userData.coupons.length === 0">쿠폰이 없습니다.</p>
               <v-list-item
                 v-for="coupon in userData.coupons"
@@ -94,6 +105,32 @@
                   color="blue darken-1"
                   text
                   @click="() => { this.showMyCouponDialog = false; }"
+              >
+                닫기
+              </v-btn>
+            </v-card-actions>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+      <v-dialog
+          v-model="showHelpDialog"
+          scrollable
+          max-width="500px"
+      >
+        <v-card>
+          <v-card-title>
+            <span class="text-h5">게임 방법</span>
+          </v-card-title>
+          <v-card-text>
+            1. 각 쿠폰마다 3번씩의 뽑기 기회가 있습니다.<br>
+            2. 당첨이 되면 해당 쿠폰은 더 이상 뽑을 수 없습니다.<br>
+            3. 쿠폰 수량이 소진되면 더 이상 뽑을 수 없습니다.<br>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                  color="blue darken-1"
+                  text
+                  @click="() => { this.showHelpDialog = false; }"
               >
                 닫기
               </v-btn>
@@ -123,6 +160,7 @@ export default {
     username: '',
     password: '',
     showMyCouponDialog: false,
+    showHelpDialog: false,
   }),
   computed: {
     ...mapGetters([
@@ -135,9 +173,6 @@ export default {
       'signIn',
       'signOut',
     ]),
-    onClickMyCoupons: function () {
-
-    },
     onClickLogin: function () {
       this.showLoginDialog = true;
     },
