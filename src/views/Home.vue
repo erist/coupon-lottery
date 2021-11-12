@@ -13,7 +13,7 @@
           <v-card-text>
             <v-container>
               <span class="text-h5 red--text">남은 수량: {{ coupon.code.length }}</span><br>
-              <span class="text-h5 blue--text">확률: {{ getProbability(coupon.code.length) }}%</span>
+              <span class="text-h5 blue--text">현재 확률: {{ (coupon.probability * 100).toFixed(2) }}%</span>
             </v-container>
             <v-card-actions>
               <v-spacer></v-spacer>
@@ -85,21 +85,27 @@ export default {
     showDrawConfirmDialog: false,
     showSpinner: false,
     drawingCoupon: {},
+    unsubscribeCoupons: null,
   }),
   created: async function () {
-    const [allUsersSnapshot, couponsSnapshot] = await Promise.all([
-      firestore.collection('ValidateUsers').get(),
-      firestore.collection('Coupons').get(),
-    ]);
+    const allUsersSnapshot = await firestore.collection('ValidateUsers').get();
     this.totalUsers = allUsersSnapshot.docs.length;
-    this.coupons = couponsSnapshot.docs.map(doc => {
-      const { name, code } = doc.data();
-      return {
-        id: doc.id,
-        name,
-        code,
-      };
+  },
+  mounted: function () {
+    this.unsubscribeCoupons = firestore.collection('Coupons').onSnapshot(querySnapshot => {
+      this.coupons = querySnapshot.docs.map(doc => {
+        const { name, code, probability } = doc.data();
+        return {
+          id: doc.id,
+          name,
+          code,
+          probability,
+        };
+      });
     });
+  },
+  beforeDestroy: function () {
+    this.unsubscribeCoupons();
   },
   computed: {
     ...mapGetters([
@@ -146,6 +152,10 @@ export default {
         couponDocId: this.drawingCoupon.id,
         timestamp: Date.now()
       });
+      const [allUsersSnapshot, drawsSnapshot] = await Promise.all([
+        firestore.collection('Users').get(),
+        firestore.collection('Draws').where('couponDocId', '==', this.drawingCoupon.id).get()
+      ]);
       const couponDoc = await couponDocRef.get();
       const p = couponDoc.data().code.length / this.totalUsers * 10000;
       const d = Math.random() * (10000 - 1) + 1;
@@ -163,10 +173,11 @@ export default {
             name: couponName,
             code: couponCodes.pop()
           }];
+          const probability = couponCodes.length / (allUsersSnapshot.docs.length  * process.env.VUE_APP_DRAW_CHANCE - drawsSnapshot.docs.length);
           task = [...task,
             t.update(drawDocRef, { pass: 'success' }),
             t.update(userDocRef, { coupons: userCoupons }),
-            t.update(couponDocRef, { code: couponCodes })
+            t.update(couponDocRef, { code: couponCodes, probability })
           ];
         } else {
           task = [...task,
