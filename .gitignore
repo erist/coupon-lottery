@@ -3,6 +3,7 @@ node_modules
 /dist
 package-lock.json
 .firebase/
+.firebaserc
 
 # local env files
 .env.local
